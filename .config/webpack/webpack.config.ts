@@ -22,6 +22,12 @@ import { getCPConfigVersion, getEntries, getPackageJson, getPluginJson, hasReadm
 import { externals } from '../bundler/externals.ts';
 import { copyFilePatterns } from '../bundler/copyFiles.ts';
 
+// [PATCH] Grafana 12.3.1 nao expoe 'react/jsx-runtime' no import map do SystemJS.
+// Removemos da lista de externals para que o webpack o empacote no bundle.
+const patchedExternals = (Array.isArray(externals) ? externals : [externals]).filter(
+  (item) => !(typeof item === 'string' && item.startsWith('react/jsx'))
+);
+
 const pluginJson = getPluginJson();
 const cpVersion = getCPConfigVersion();
 const pluginVersion = getPackageJson().version;
@@ -58,7 +64,7 @@ const config = async (env: Env): Promise<Configuration> => {
 
     entry: await getEntries(),
 
-    externals,
+    externals: patchedExternals,
 
     // Support WebAssembly according to latest spec - makes WebAssembly module async
     experiments: {
