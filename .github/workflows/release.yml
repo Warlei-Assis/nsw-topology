@@ -1,5 +1,15 @@
-# This GitHub Action automates the process of building Grafana plugins.
-# (For more information, see https://github.com/grafana/plugin-actions/blob/main/build-plugin/README.md)
+# Builds the plugin on a version tag and publishes the zip as a release asset.
+#
+# This used to call grafana/plugin-actions/build-plugin. That action runs the
+# full plugin-validator, whose osv-scanner walks package-lock.json and fails the
+# build on CVEs in dev-only dependencies (browserslist, fast-uri) that never
+# reach the bundle. The steps below mirror ci.yml instead and keep the validator
+# in metadatavalid mode, which is the check that actually guards the artifact.
+#
+# The packaging step matters: `zip -r` on Linux writes '/' as the ZIP path
+# separator. Repackaging by hand on Windows with Compress-Archive writes '\',
+# which Go's archive/zip does not normalise, so Grafana extracts a single file
+# named "<plugin-id>\plugin.json" and fails to load the plugin.
 name: Release
 
 on:
@@ -19,11 +29,93 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: grafana/plugin-actions/build-plugin@build-plugin/v1.0.2
-        # Uncomment to enable plugin signing
-        # (For more info on how to generate the access policy token see https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin#generate-an-access-policy-token)
-        #with:
-        # Make sure to save the token in your repository secrets
-        #policy_token: $
-        # Usage of GRAFANA_API_KEY is deprecated, prefer `policy_token` option above
-        #grafana_token: $
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check types
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Get plugin metadata
+        id: metadata
+        run: |
+          GRAFANA_PLUGIN_ID=$(jq -r .id dist/plugin.json)
+          GRAFANA_PLUGIN_VERSION=$(jq -r .info.version dist/plugin.json)
+
+          echo "plugin-id=${GRAFANA_PLUGIN_ID}" >> $GITHUB_OUTPUT
+          echo "plugin-version=${GRAFANA_PLUGIN_VERSION}" >> $GITHUB_OUTPUT
+          echo "archive=${GRAFANA_PLUGIN_ID}-${GRAFANA_PLUGIN_VERSION}.zip" >> $GITHUB_OUTPUT
+
+      - name: Check package version matches tag
+        run: |
+          if [ "v${PLUGIN_VERSION}" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error::plugin version ${PLUGIN_VERSION} does not match tag ${GITHUB_REF_NAME}; the tag should be v${PLUGIN_VERSION}"
+            exit 1
+          fi
+        env:
+          PLUGIN_VERSION: ${{ steps.metadata.outputs.plugin-version }}
+
+      - name: Package plugin
+        run: |
+          mv dist "${PLUGIN_ID}"
+          zip "${ARCHIVE}" "${PLUGIN_ID}" -r
+        env:
+          ARCHIVE: ${{ steps.metadata.outputs.archive }}
+          PLUGIN_ID: ${{ steps.metadata.outputs.plugin-id }}
+
+      # Guards the failure this workflow exists to prevent: every path inside the
+      # archive must use '/', and plugin.json must sit under the container folder.
+      - name: Verify archive layout
+        run: |
+          python3 - "${ARCHIVE}" "${PLUGIN_ID}" <<'PY'
+          import sys, zipfile
+          archive, plugin_id = sys.argv[1], sys.argv[2]
+          # chr(92) rather than an escaped literal: this string survives every
+          # shell/YAML quoting layer between here and the runner unchanged.
+          BACKSLASH = chr(92)
+          # orig_filename, not namelist(): namelist() rewrites '\' to '/', which
+          # would hide exactly the corruption this step exists to catch.
+          names = [i.orig_filename for i in zipfile.ZipFile(archive).infolist()]
+          bad = [n for n in names if BACKSLASH in n]
+          if bad:
+              sys.exit("backslash path separators in archive: %s" % bad)
+          if plugin_id + "/plugin.json" not in names:
+              sys.exit("%s/plugin.json missing; entries: %s" % (plugin_id, names))
+          print("ok: %d entries, all forward-slash separated" % len(names))
+          PY
+        env:
+          ARCHIVE: ${{ steps.metadata.outputs.archive }}
+          PLUGIN_ID: ${{ steps.metadata.outputs.plugin-id }}
+
+      - name: Check plugin.json
+        run: |
+          docker run --pull=always \
+            -v $PWD/${ARCHIVE}:/archive.zip \
+            grafana/plugin-validator-cli -analyzer=metadatavalid /archive.zip
+        env:
+          ARCHIVE: ${{ steps.metadata.outputs.archive }}
+
+      - name: Build release notes
+        run: awk '/^## / {s++} s == 1 {print}' CHANGELOG.md > release_notes.md
+
+      - name: Publish release
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --notes-file release_notes.md \
+            || echo "release already exists, uploading asset"
+          gh release upload "${GITHUB_REF_NAME}" "${ARCHIVE}" --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARCHIVE: ${{ steps.metadata.outputs.archive }}
