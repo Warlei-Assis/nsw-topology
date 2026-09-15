@@ -44,6 +44,9 @@ const convertV1IconType = (iconType: string): string => {
     olt: 'olt',
     camera: 'camera',
     cloud: 'cloud',
+    vnet: 'vnet',
+    vpn: 'vpn',
+    connection: 'connection',
     cpu: 'cpu',
     desktop: 'desktop',
     laptop: 'laptop',
@@ -222,6 +225,7 @@ export const BackupModal: React.FC<Props> = ({ options, onRestore, onClose }) =>
       colors: options.colors,
       general: options.general,
       interaction: options.interaction,
+      customIcons: options.customIcons || [],
     };
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -284,9 +288,15 @@ export const BackupModal: React.FC<Props> = ({ options, onRestore, onClose }) =>
           if (data.interaction) {
             patch.interaction = data.interaction;
           }
+          if (Array.isArray(data.customIcons)) {
+            patch.customIcons = data.customIcons;
+          }
+          const iconCount = Array.isArray(data.customIcons) ? data.customIcons.length : 0;
           setPendingImport({
             patch,
-            summary: `${data.nodes.length} nodes and ${data.connections.length} connections`,
+            summary:
+              `${data.nodes.length} nodes and ${data.connections.length} connections` +
+              (iconCount > 0 ? `, ${iconCount} custom icons` : ''),
           });
         }
       } catch {

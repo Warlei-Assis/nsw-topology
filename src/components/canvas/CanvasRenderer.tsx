@@ -66,6 +66,8 @@ interface Props {
   title: string;
   titleSize: number;
   addNodeTrigger: number;
+  // bumped when the custom icon library changes, so memoised nodes repaint
+  customIconsRev: number;
   searchOpen: boolean;
   onNodePositionChange: (nodeId: string, x: number, y: number) => void;
   onNodeResize: (nodeId: string, w: number, h: number) => void;
@@ -95,6 +97,7 @@ export const CanvasRenderer: React.FC<Props> = ({
   title,
   titleSize,
   addNodeTrigger,
+  customIconsRev,
   searchOpen,
   onNodePositionChange,
   onNodeResize,
@@ -404,6 +407,7 @@ export const CanvasRenderer: React.FC<Props> = ({
             iconSize: node.iconSize || DEFAULT_ICON_SIZE,
             width: node.width || DEFAULT_NODE_WIDTH,
             height: node.height || DEFAULT_NODE_HEIGHT,
+            iconRev: customIconsRev,
           },
         };
       }),
@@ -417,6 +421,7 @@ export const CanvasRenderer: React.FC<Props> = ({
       nodeHasZeroTraffic,
       resolvedColors,
       searchQuery,
+      customIconsRev,
     ]
   );
 

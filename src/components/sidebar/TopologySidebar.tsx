@@ -6,6 +6,7 @@ interface Props {
   onToggleZoom: () => void;
   onToggleSearch: () => void;
   onBackup: () => void;
+  onIconLibrary: () => void;
   zoomEnabled: boolean;
   searchOpen: boolean;
   showDonateHeart?: boolean;
@@ -17,6 +18,7 @@ export const TopologySidebar: React.FC<Props> = ({
   onToggleZoom,
   onToggleSearch,
   onBackup,
+  onIconLibrary,
   zoomEnabled,
   searchOpen,
   showDonateHeart,
@@ -33,6 +35,7 @@ export const TopologySidebar: React.FC<Props> = ({
         onClick={onToggleZoom}
         active={zoomEnabled}
       />
+      <SidebarBtn icon={iconLibraryIcon} tooltip="Icon Library" onClick={onIconLibrary} />
       <SidebarBtn icon={backupIcon} tooltip="Manage Backups" onClick={onBackup} />
       {showDonateHeart && (
         <>
@@ -168,5 +171,7 @@ const zoomOnIcon =
   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>';
 const zoomOffIcon =
   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/><line x1="8" y1="11" x2="14" y2="11"/></svg>';
+const iconLibraryIcon =
+  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/></svg>';
 const backupIcon =
   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';

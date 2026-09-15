@@ -1,3 +1,5 @@
+import { CustomIcon } from '../types';
+
 // helper to wrap svg path into a 24x24 icon
 const ic = (inner: string) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
@@ -54,6 +56,9 @@ export const SVG_ICONS: Record<string, string> = {
   antenna: ic(
     '<path d="M2 12L7 2"/><path d="M22 12l-5-10"/><path d="M4.6 18.2L7 12"/><path d="M19.4 18.2L17 12"/><circle cx="12" cy="19" r="3"/><path d="M12 16v-4"/>'
   ),
+  connection: ic(
+    '<path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 0 1 0 10h-2"/><line x1="8" x2="16" y1="12" y2="12"/>'
+  ),
   cable: ic(
     '<path d="M17 21v-2a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1"/><path d="M7 21v-2a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v1a1 1 0 0 0 1 1"/><path d="M19.6 14.4A8 8 0 1 0 6 8"/><path d="M12 10v2"/>'
   ),
@@ -71,6 +76,9 @@ export const SVG_ICONS: Record<string, string> = {
     '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>'
   ),
   lock: ic('<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'),
+  vpn: ic(
+    '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><circle cx="12" cy="10.5" r="1.5"/><path d="M12 12v3"/>'
+  ),
 
   retificadora: ic(
     '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>'
@@ -82,6 +90,9 @@ export const SVG_ICONS: Record<string, string> = {
   cloud: ic('<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>'),
   backup: ic(
     '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><path d="M12 13v5"/><path d="M9 16l3 3 3-3"/>'
+  ),
+  vnet: ic(
+    '<rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="8" cy="9.5" r="1.5"/><circle cx="16" cy="9.5" r="1.5"/><circle cx="12" cy="15.5" r="1.5"/><path d="M9.5 9.5h5"/><path d="M9.2 10.8 10.8 14.2"/><path d="M14.8 10.8 13.2 14.2"/>'
   ),
 
   building: ic(
@@ -105,27 +116,111 @@ export const SVG_ICONS: Record<string, string> = {
   ),
 };
 
-export const PRIORITY_ICONS = ['router', 'switch', 'olt', 'server', 'firewall', 'cgnat', 'cpu', 'globe'];
+export const PRIORITY_ICONS = [
+  'router',
+  'switch',
+  'olt',
+  'server',
+  'firewall',
+  'cgnat',
+  'cpu',
+  'globe',
+  'vpn',
+  'vnet',
+  'cloud',
+  'connection',
+];
 
 export const ICON_KEYS = Object.keys(SVG_ICONS);
 
+// ── custom icons ────────────────────────────────────────────────────────────
+// user-uploaded svgs live in the dashboard JSON, not in this bundle. the panel
+// pushes them here on every options change so the sync lookups below — called
+// deep inside the canvas — can resolve them without prop drilling.
+
+const CUSTOM_PREFIX = 'custom:';
+
+let customSvg: Record<string, string> = {};
+let customName: Record<string, string> = {};
+
+export const customIconKey = (id: string): string => CUSTOM_PREFIX + id;
+
+export const isCustomIcon = (key: string): boolean => key.startsWith(CUSTOM_PREFIX);
+
+export const setCustomIcons = (icons: CustomIcon[] | undefined): void => {
+  customSvg = {};
+  customName = {};
+  for (const item of icons || []) {
+    if (!item?.id || !item.svg) {
+      continue;
+    }
+    const key = customIconKey(item.id);
+    customSvg[key] = item.svg;
+    customName[key] = item.name || item.id;
+  }
+};
+
+// display label — custom icons carry a user-given name, built-ins are their key
+export const getIconLabel = (key: string): string => customName[key] || key;
+
+const resolveSvg = (key: string): string => customSvg[key] || SVG_ICONS[key] || SVG_ICONS['server'];
+
+const toDataUri = (svg: string): string => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+
 // icon key -> data uri (for img src)
-export const getIconDataUri = (key: string): string => {
-  const svg = SVG_ICONS[key] || SVG_ICONS['server'];
-  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-};
+export const getIconDataUri = (key: string): string => toDataUri(resolveSvg(key));
 
-// same but with custom stroke color
+// same but with custom stroke color. custom icons are left untouched: they are
+// usually full-color artwork with no white stroke to swap, and vendor icon
+// terms generally require showing them unaltered.
 export const getIconDataUriColored = (key: string, color: string): string => {
-  const svg = (SVG_ICONS[key] || SVG_ICONS['server']).replace(/stroke="#ffffff"/g, `stroke="${color}"`);
-  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  if (customSvg[key]) {
+    return toDataUri(customSvg[key]);
+  }
+  return toDataUri(resolveSvg(key).replace(/stroke="#ffffff"/g, `stroke="${color}"`));
 };
 
-// search/filter icons, network ones first
+// search/filter icons, network ones first, then the user's own
 export const searchIcons = (query: string): string[] => {
+  const customKeys = Object.keys(customSvg);
   if (!query) {
-    return [...PRIORITY_ICONS, ...ICON_KEYS.filter((k) => !PRIORITY_ICONS.includes(k))];
+    return [...PRIORITY_ICONS, ...customKeys, ...ICON_KEYS.filter((k) => !PRIORITY_ICONS.includes(k))];
   }
   const q = query.toLowerCase();
-  return ICON_KEYS.filter((k) => k.toLowerCase().includes(q));
+  return [...customKeys, ...ICON_KEYS].filter((k) => getIconLabel(k).toLowerCase().includes(q));
+};
+
+// ── svg sanitising ──────────────────────────────────────────────────────────
+// icons render through <img src="data:...">, which already blocks scripting,
+// but uploads are stripped of active content and external refs anyway so a
+// hostile file can never phone home or survive a future inline-render change.
+
+export const MAX_ICON_BYTES = 64 * 1024;
+
+export const sanitizeSvg = (raw: string): { svg?: string; error?: string } => {
+  let s = (raw || '').trim();
+  if (!s) {
+    return { error: 'file is empty' };
+  }
+  if (s.length > MAX_ICON_BYTES) {
+    return { error: `too large (max ${Math.round(MAX_ICON_BYTES / 1024)} KB)` };
+  }
+
+  s = s.replace(/<\?xml[\s\S]*?\?>/gi, '');
+  s = s.replace(/<!DOCTYPE[^>[]*(\[[\s\S]*?\])?[^>]*>/gi, '');
+  s = s.replace(/<!--[\s\S]*?-->/g, '');
+
+  s = s.replace(/<script[\s\S]*?<\/script>/gi, '');
+  s = s.replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi, '');
+  s = s.replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, '');
+  s = s.replace(/\son[a-z]+\s*=\s*'[^']*'/gi, '');
+  // keep internal #fragment refs (<use>, gradients) and inline images, drop the rest
+  s = s.replace(/\s(?:xlink:)?href\s*=\s*"(?!#|data:image\/)[^"]*"/gi, '');
+  s = s.replace(/\s(?:xlink:)?href\s*=\s*'(?!#|data:image\/)[^']*'/gi, '');
+
+  s = s.trim();
+  if (!/^<svg[\s>]/i.test(s) || !/<\/svg>$/i.test(s)) {
+    return { error: 'not a valid SVG file' };
+  }
+  return { svg: s };
 };

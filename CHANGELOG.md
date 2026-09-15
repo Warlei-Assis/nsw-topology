@@ -2,6 +2,12 @@
 
 > 🇧🇷 [Leia em Português](CHANGELOG-pt.md)
 
+## [Unreleased]
+
+- New built-in icons: `vpn`, `vnet` and `connection`
+- **Icon Library** — upload your own SVG icons from the sidebar. Vendor icon sets (Azure, AWS, GCP) are deliberately **not bundled**: point the library at your own copy instead. Icons are stored in the dashboard JSON and included in backups.
+- Uploaded SVGs are stripped of scripts, event handlers and external references before being stored
+
 ## [2.0.1-beta] — 2026-03-04
 
 Full rewrite. Moved from Cytoscape.js to **ReactFlow** and renamed the plugin from `gabrielnsw-noctopology-panel` to `gabrielnsw-nswtopology-panel`.

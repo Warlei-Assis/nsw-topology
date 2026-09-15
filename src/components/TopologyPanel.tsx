@@ -1,13 +1,15 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { PanelProps } from '@grafana/data';
 import { ReactFlowProvider, useReactFlow } from '@xyflow/react';
-import { TopologyOptions, NodeConfig, ConnectionConfig } from '../types';
+import { TopologyOptions, NodeConfig, ConnectionConfig, CustomIcon } from '../types';
 import { parseDataFrames } from '../data/parser';
 import { DEFAULT_APPEARANCE, DEFAULT_COLORS, DEFAULT_INTERACTION, DEFAULT_METRIC } from '../constants';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
 import { TopologySidebar } from './sidebar/TopologySidebar';
 import { WelcomeModal } from './WelcomeModal';
 import { BackupModal } from './editors/BackupModal';
+import { IconLibraryModal } from './editors/IconLibraryModal';
+import { setCustomIcons } from './icons';
 
 type Props = PanelProps<TopologyOptions>;
 
@@ -30,11 +32,22 @@ const InnerPanel: React.FC<Props> = ({ options, data, width, height, onOptionsCh
   const connections = options.connections || [];
   const parsedData = useMemo(() => parseDataFrames(data.series), [data.series]);
 
+  // publish the user's icons to the registry during render, so the canvas can
+  // resolve them on first paint. the counter lets memoised nodes repaint.
+  const customIcons = useMemo(() => options.customIcons || [], [options.customIcons]);
+  const iconRev = useRef(0);
+  const customIconsRev = useMemo(() => {
+    setCustomIcons(customIcons);
+    iconRev.current += 1;
+    return iconRev.current;
+  }, [customIcons]);
+
   const [zoomEnabled, setZoomEnabled] = useState(interaction.enableZoom);
   const [searchOpen, setSearchOpen] = useState(false);
   const [addNodeTrigger, setAddNodeTrigger] = useState(0);
   const [showWelcome, setShowWelcome] = useState(interaction.showWelcome !== false);
   const [showBackup, setShowBackup] = useState(false);
+  const [showIconLibrary, setShowIconLibrary] = useState(false);
   const reactFlow = useReactFlow();
 
   const title = options.general?.title || '';
@@ -150,6 +163,7 @@ const InnerPanel: React.FC<Props> = ({ options, data, width, height, onOptionsCh
           onToggleZoom={handleToggleZoom}
           onToggleSearch={() => setSearchOpen((prev) => !prev)}
           onBackup={() => setShowBackup(true)}
+          onIconLibrary={() => setShowIconLibrary(true)}
           zoomEnabled={zoomEnabled}
           searchOpen={searchOpen}
           showDonateHeart={appearance.showDonateCard === false}
@@ -173,6 +187,7 @@ const InnerPanel: React.FC<Props> = ({ options, data, width, height, onOptionsCh
             title={title}
             titleSize={titleSize}
             addNodeTrigger={addNodeTrigger}
+            customIconsRev={customIconsRev}
             searchOpen={searchOpen}
             onNodePositionChange={handleNodePositionChange}
             onNodeResize={handleNodeResize}
@@ -190,6 +205,13 @@ const InnerPanel: React.FC<Props> = ({ options, data, width, height, onOptionsCh
           options={options}
           onRestore={(patch) => updateOptions(patch)}
           onClose={() => setShowBackup(false)}
+        />
+      )}
+      {showIconLibrary && (
+        <IconLibraryModal
+          icons={customIcons}
+          onChange={(icons: CustomIcon[]) => updateOptions({ customIcons: icons })}
+          onClose={() => setShowIconLibrary(false)}
         />
       )}
     </div>

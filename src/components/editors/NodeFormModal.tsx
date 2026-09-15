@@ -15,7 +15,7 @@ import {
   METRIC_PATTERNS,
   autoDetectField,
 } from '../../constants';
-import { searchIcons, getIconDataUri } from '../icons';
+import { searchIcons, getIconDataUri, getIconLabel } from '../icons';
 import { COLORS, FONT, SECTION_HEADER } from '../../styles/tokens';
 
 interface Props {
@@ -224,8 +224,21 @@ export const NodeFormModal: React.FC<Props> = ({ node, hostNames, usedHostNames,
                   transition: 'all 0.12s',
                 }}
               >
-                <img src={getIconDataUri(k)} alt={k} style={{ width: 22, height: 22 }} draggable={false} />
-                <span style={{ fontSize: FONT.xs, color: COLORS.textMuted, lineHeight: 1 }}>{k}</span>
+                <img src={getIconDataUri(k)} alt={getIconLabel(k)} style={{ width: 22, height: 22 }} draggable={false} />
+                <span
+                  style={{
+                    fontSize: FONT.xs,
+                    color: COLORS.textMuted,
+                    lineHeight: 1,
+                    maxWidth: '100%',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                  title={getIconLabel(k)}
+                >
+                  {getIconLabel(k)}
+                </span>
               </div>
             ))}
           </div>

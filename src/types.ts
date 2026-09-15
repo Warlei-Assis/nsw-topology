@@ -6,6 +6,16 @@ export interface TopologyOptions {
   appearance: AppearanceConfig;
   colors: ColorsConfig;
   interaction: InteractionConfig;
+  customIcons?: CustomIcon[];
+}
+
+// user-supplied svg icon, stored in the dashboard JSON.
+// lets users bring vendor icon sets (Azure, AWS, GCP...) without the
+// plugin redistributing artwork it has no license to ship.
+export interface CustomIcon {
+  id: string;
+  name: string;
+  svg: string;
 }
 
 export interface GeneralConfig {

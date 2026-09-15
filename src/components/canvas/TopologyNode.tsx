@@ -1,6 +1,7 @@
 import React, { memo, useState, useRef } from 'react';
 import { Handle, Position, NodeResizeControl, type NodeProps, type Node } from '@xyflow/react';
 import { getIconDataUriColored } from '../icons';
+import { DEFAULT_ICON_COLOR } from '../../constants';
 import {
   COLORS,
   FONT,
@@ -40,6 +41,9 @@ export type TopologyNodeData = {
   iconSize: number;
   width: number;
   height: number;
+  // revision of the custom icon library — changes force a repaint of this
+  // memoised node when the user edits their icons
+  iconRev: number;
 };
 
 type TopologyNodeType = Node<TopologyNodeData, 'topology'>;
@@ -56,10 +60,10 @@ const handleStyle: React.CSSProperties = {
 };
 
 export const TopologyNode = memo(({ data, selected }: NodeProps<TopologyNodeType>) => {
-  const { label, icon, statusColor, status, uptimeValue, connections, metrics, textSize, iconSize } = data;
+  const { label, icon, statusColor, status, uptimeValue, connections, metrics, textSize, iconSize, iconColor } = data;
   const [hovered, setHovered] = useState(false);
   const nodeRef = useRef<HTMLDivElement>(null);
-  const iconUri = getIconDataUriColored(icon, COLORS.textWhite);
+  const iconUri = getIconDataUriColored(icon, iconColor || DEFAULT_ICON_COLOR);
 
   return (
     <>

@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+- Novos ícones nativos: `vpn`, `vnet` e `connection`
+- **Biblioteca de Ícones** — suba seus próprios SVGs pela sidebar. Conjuntos de fabricantes (Azure, AWS, GCP) **não vêm embutidos** de propósito: aponte a biblioteca para a sua própria cópia. Os ícones ficam no JSON do dashboard e entram nos backups.
+- SVGs enviados passam por sanitização — scripts, handlers de evento e referências externas são removidos
+
 ## [2.0.1-beta] — 2026-03-04
 
 Reescrita total. Saiu o Cytoscape.js, entrou o **ReactFlow**. Plugin renomeado de `gabrielnsw-noctopology-panel` pra `gabrielnsw-nswtopology-panel`.
