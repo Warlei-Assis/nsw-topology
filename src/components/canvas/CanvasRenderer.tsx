@@ -66,8 +66,8 @@ interface Props {
   title: string;
   titleSize: number;
   addNodeTrigger: number;
-  // bumped when the custom icon library changes, so memoised nodes repaint
-  customIconsRev: number;
+  // fingerprint of the custom icon library, so memoised nodes repaint on change
+  customIconsRev: string;
   searchOpen: boolean;
   onNodePositionChange: (nodeId: string, x: number, y: number) => void;
   onNodeResize: (nodeId: string, w: number, h: number) => void;

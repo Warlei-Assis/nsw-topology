@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { PanelProps } from '@grafana/data';
 import { ReactFlowProvider, useReactFlow } from '@xyflow/react';
 import { TopologyOptions, NodeConfig, ConnectionConfig, CustomIcon } from '../types';
@@ -33,13 +33,12 @@ const InnerPanel: React.FC<Props> = ({ options, data, width, height, onOptionsCh
   const parsedData = useMemo(() => parseDataFrames(data.series), [data.series]);
 
   // publish the user's icons to the registry during render, so the canvas can
-  // resolve them on first paint. the counter lets memoised nodes repaint.
+  // resolve them on first paint. the fingerprint is a pure function of the
+  // library's contents — it lets memoised nodes repaint when icons change.
   const customIcons = useMemo(() => options.customIcons || [], [options.customIcons]);
-  const iconRev = useRef(0);
   const customIconsRev = useMemo(() => {
     setCustomIcons(customIcons);
-    iconRev.current += 1;
-    return iconRev.current;
+    return customIcons.map((i) => `${i.id}:${i.name}:${i.svg.length}`).join('|');
   }, [customIcons]);
 
   const [zoomEnabled, setZoomEnabled] = useState(interaction.enableZoom);

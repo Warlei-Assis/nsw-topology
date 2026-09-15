@@ -41,9 +41,9 @@ export type TopologyNodeData = {
   iconSize: number;
   width: number;
   height: number;
-  // revision of the custom icon library — changes force a repaint of this
+  // fingerprint of the custom icon library — changes force a repaint of this
   // memoised node when the user edits their icons
-  iconRev: number;
+  iconRev: string;
 };
 
 type TopologyNodeType = Node<TopologyNodeData, 'topology'>;
