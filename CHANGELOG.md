@@ -2,7 +2,7 @@
 
 > 🇧🇷 [Leia em Português](CHANGELOG-pt.md)
 
-## [Unreleased]
+## [2.3.0] — 2026-09-15
 
 - New built-in icons: `vpn`, `vnet` and `connection`
 - **Icon Library** — upload your own SVG icons from the sidebar. Vendor icon sets (Azure, AWS, GCP) are deliberately **not bundled**: point the library at your own copy instead. Icons are stored in the dashboard JSON and included in backups.

@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [2.3.0] — 2026-09-15
 
 - Novos ícones nativos: `vpn`, `vnet` e `connection`
 - **Biblioteca de Ícones** — suba seus próprios SVGs pela sidebar. Conjuntos de fabricantes (Azure, AWS, GCP) **não vêm embutidos** de propósito: aponte a biblioteca para a sua própria cópia. Os ícones ficam no JSON do dashboard e entram nos backups.
